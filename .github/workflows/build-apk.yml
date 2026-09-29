@@ -62,7 +62,7 @@ jobs:
           fi
           echo "sdkmanager: $SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "platform-tools" "platforms;android-37" "build-tools;36.0.0"
+          "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
@@ -74,6 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$ANDROID_PROJECT"
+          sed -i -E "s/compileSdk 37/compileSdk 36/; s/targetSdk 37/targetSdk 36/" app/build.gradle
           gradle --no-daemon assembleDebug
 
       - name: Upload APK
