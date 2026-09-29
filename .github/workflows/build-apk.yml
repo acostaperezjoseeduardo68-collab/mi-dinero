@@ -75,7 +75,37 @@ jobs:
           set -euo pipefail
           cd "$ANDROID_PROJECT"
           sed -i -E "s/compileSdk 37/compileSdk 36/; s/targetSdk 37/targetSdk 36/" app/build.gradle
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle")
+          s = p.read_text()
+          old = """    buildTypes {
+            release {
+          """
+          new = """    buildTypes {
+            debug {
+                v1SigningEnabled true
+                v2SigningEnabled true
+            }
+            release {
+          """
+          if "v1SigningEnabled true" not in s:
+              if old not in s:
+                  raise SystemExit("No se encontró el bloque buildTypes esperado")
+              s = s.replace(old, new, 1)
+              p.write_text(s)
+          PY
           gradle --no-daemon assembleDebug
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find . -type f -path '*/app/build/outputs/apk/debug/app-debug.apk' -print -quit)"
+          test -n "$APK"
+          ls -lh "$APK"
+          unzip -t "$APK"
+          test -f "$(dirname "$APK")/app-debug.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
