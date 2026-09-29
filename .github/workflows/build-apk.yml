@@ -60,7 +60,6 @@ jobs:
             echo "No se encontró sdkmanager."
             exit 1
           fi
-          echo "sdkmanager: $SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
@@ -75,27 +74,46 @@ jobs:
           set -euo pipefail
           cd "$ANDROID_PROJECT"
           sed -i -E "s/compileSdk 37/compileSdk 36/; s/targetSdk 37/targetSdk 36/" app/build.gradle
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("app/build.gradle")
-          s = p.read_text()
-          old = """    buildTypes {
-            release {
-          """
-          new = """    buildTypes {
-            debug {
-                v1SigningEnabled true
-                v2SigningEnabled true
-            }
-            release {
-          """
-          if "v1SigningEnabled true" not in s:
-              if old not in s:
-                  raise SystemExit("No se encontró el bloque buildTypes esperado")
-              s = s.replace(old, new, 1)
-              p.write_text(s)
-          PY
           gradle --no-daemon assembleDebug
+
+      - name: Sign APK with v1 and v2
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$ANDROID_PROJECT"
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools/36.0.0" -maxdepth 1 -type f -name 'apksigner' -print -quit)"
+          test -x "$APKSIGNER"
+
+          mkdir -p "$HOME/.android"
+          KEYSTORE="$HOME/.android/debug.keystore"
+
+          if [ ! -f "$KEYSTORE" ]; then
+            keytool -genkeypair \
+              -keystore "$KEYSTORE" \
+              -storepass android \
+              -keypass android \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          "$APKSIGNER" sign \
+            --ks "$KEYSTORE" \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --ks-key-alias androiddebugkey \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            "$APK"
+
+          "$APKSIGNER" verify --verbose --min-sdk-version 26 "$APK"
+          jarsigner -verify -verbose "$APK" >/tmp/jarsigner.txt 2>&1 || {
+            cat /tmp/jarsigner.txt
+            exit 1
+          }
 
       - name: Verify APK
         shell: bash
@@ -104,8 +122,8 @@ jobs:
           APK="$(find . -type f -path '*/app/build/outputs/apk/debug/app-debug.apk' -print -quit)"
           test -n "$APK"
           ls -lh "$APK"
-          unzip -t "$APK"
-          test -f "$(dirname "$APK")/app-debug.apk"
+          unzip -t "$APK" >/dev/null
+          echo "APK verificada correctamente."
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
