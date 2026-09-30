@@ -50,9 +50,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ICON_DIR="$ANDROID_PROJECT/app/src/main/res/drawable-nodpi"
+          ICON_DIR="$ANDROID_PROJECT/app/src/main/res/drawable"
           mkdir -p "$ICON_DIR"
-          base64 -d scripts/mi_dinero_icon.webp.b64 > "$ICON_DIR/mi_dinero_icon.webp"
+          cp scripts/mi_dinero_icon.xml "$ICON_DIR/mi_dinero_icon.xml"
           MANIFEST="$ANDROID_PROJECT/app/src/main/AndroidManifest.xml"
           test -f "$MANIFEST"
           if grep -q 'android:icon=' "$MANIFEST"; then
