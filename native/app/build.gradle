@@ -1,5 +1,17 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
-android { namespace 'com.midinero.app'; compileSdk 36
-    defaultConfig { applicationId 'com.midinero.app'; minSdk 26; targetSdk 36; versionCode 20; versionName '2.0.0' }
+android {
+    namespace 'com.midinero.app'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.midinero.app'
+        minSdk 26
+        targetSdk 36
+        versionCode 21
+        versionName '2.0.1'
+    }
 }
