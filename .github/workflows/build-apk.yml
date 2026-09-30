@@ -18,67 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Find and extract Android project
+      - name: Usar proyecto Android nativo
         shell: bash
         run: |
           set -euo pipefail
-          zip_file="$(find . -maxdepth 2 -type f -name 'mi-dinero-android-proyecto*.zip' -print -quit)"
-          if [ -z "$zip_file" ]; then
-            echo "No se encontró el ZIP del proyecto Android."
-            exit 1
-          fi
-          echo "Usando: $zip_file"
-          unzip -q "$zip_file"
-
-      - name: Locate Android project
-        shell: bash
-        run: |
-          set -euo pipefail
-          candidate="$(find . -maxdepth 4 -type f -name 'settings.gradle' -path '*/mi-dinero-android/*' -print -quit)"
-          if [ -n "$candidate" ]; then
-            project_dir="$(dirname "$candidate")"
-            echo "ANDROID_PROJECT=$project_dir" >> "$GITHUB_ENV"
-            echo "Proyecto Android: $project_dir"
-          else
-            echo "No se encontró settings.gradle del proyecto Android."
-            find . -maxdepth 5 -type f | head -250
-            exit 1
-          fi
-
-
-      - name: Usar interfaz actual de Mi Dinero
-        shell: bash
-        run: |
-          set -euo pipefail
-          INDEX_HTML="$ANDROID_PROJECT/app/src/main/assets/index.html"
-          test -f "$INDEX_HTML"
-          cp scripts/mi_dinero_app_v14.html "$INDEX_HTML"
-
-      - name: Aplicar icono de Mi Dinero
-        shell: bash
-        run: |
-          set -euo pipefail
-          ICON_DIR="$ANDROID_PROJECT/app/src/main/res/drawable"
-          mkdir -p "$ICON_DIR"
-          cp scripts/mi_dinero_icon.xml "$ICON_DIR/mi_dinero_icon.xml"
-          MANIFEST="$ANDROID_PROJECT/app/src/main/AndroidManifest.xml"
-          test -f "$MANIFEST"
-          if grep -q 'android:icon=' "$MANIFEST"; then
-            sed -i 's#android:icon="[^"]*"#android:icon="@drawable/mi_dinero_icon"#' "$MANIFEST"
-          else
-            sed -i 's#<application#<application android:icon="@drawable/mi_dinero_icon"#' "$MANIFEST"
-          fi
-          if grep -q 'android:roundIcon=' "$MANIFEST"; then
-            sed -i 's#android:roundIcon="[^"]*"#android:roundIcon="@drawable/mi_dinero_icon"#' "$MANIFEST"
-          fi
-
-      - name: Agregar historial y actualización automática de tasa BCV
-        shell: bash
-        run: |
-          set -euo pipefail
-          INDEX_HTML="$(find "$ANDROID_PROJECT" -type f -path '*/src/main/assets/index.html' -print -quit)"
-          test -n "$INDEX_HTML"
-          python3 scripts/add_rate_history.py "$INDEX_HTML"
+          test -f native/settings.gradle
+          echo "ANDROID_PROJECT=$GITHUB_WORKSPACE/native" >> "$GITHUB_ENV"
 
       - name: Set up Java 21
         uses: actions/setup-java@v5
