@@ -7,11 +7,20 @@ android {
     namespace 'com.midinero.app'
     compileSdk 36
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
     defaultConfig {
         applicationId 'com.midinero.app'
         minSdk 26
         targetSdk 36
         versionCode 21
         versionName '2.0.1'
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
     }
 }
