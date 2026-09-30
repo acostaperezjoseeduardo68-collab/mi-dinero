@@ -55,18 +55,14 @@ jobs:
           base64 -d scripts/mi_dinero_icon.webp.b64 > "$ICON_DIR/mi_dinero_icon.webp"
           MANIFEST="$ANDROID_PROJECT/app/src/main/AndroidManifest.xml"
           test -f "$MANIFEST"
-          python3 - "$MANIFEST" <<'PY'
-import re, sys
-path = sys.argv[1]
-s = open(path, encoding="utf-8").read()
-if re.search(r'android:icon="[^"]*"', s):
-    s = re.sub(r'android:icon="[^"]*"', 'android:icon="@drawable/mi_dinero_icon"', s, count=1)
-else:
-    s = re.sub(r'(<application\b)', r'\1\n        android:icon="@drawable/mi_dinero_icon"', s, count=1)
-if re.search(r'android:roundIcon="[^"]*"', s):
-    s = re.sub(r'android:roundIcon="[^"]*"', 'android:roundIcon="@drawable/mi_dinero_icon"', s, count=1)
-open(path, "w", encoding="utf-8").write(s)
-PY
+          if grep -q 'android:icon=' "$MANIFEST"; then
+            sed -i 's#android:icon="[^"]*"#android:icon="@drawable/mi_dinero_icon"#' "$MANIFEST"
+          else
+            sed -i 's#<application#<application android:icon="@drawable/mi_dinero_icon"#' "$MANIFEST"
+          fi
+          if grep -q 'android:roundIcon=' "$MANIFEST"; then
+            sed -i 's#android:roundIcon="[^"]*"#android:roundIcon="@drawable/mi_dinero_icon"#' "$MANIFEST"
+          fi
 
       - name: Agregar historial y actualización automática de tasa BCV
         shell: bash
