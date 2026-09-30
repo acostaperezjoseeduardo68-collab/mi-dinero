@@ -46,6 +46,14 @@ jobs:
           fi
 
 
+      - name: Usar interfaz actual de Mi Dinero
+        shell: bash
+        run: |
+          set -euo pipefail
+          INDEX_HTML="$ANDROID_PROJECT/app/src/main/assets/index.html"
+          test -f "$INDEX_HTML"
+          cp scripts/mi_dinero_app_v14.html "$INDEX_HTML"
+
       - name: Aplicar icono de Mi Dinero
         shell: bash
         run: |
