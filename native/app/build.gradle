@@ -1,0 +1,5 @@
+plugins { id 'com.android.application' }
+
+android { namespace 'com.midinero.app'; compileSdk 36
+    defaultConfig { applicationId 'com.midinero.app'; minSdk 26; targetSdk 36; versionCode 20; versionName '2.0.0' }
+}
